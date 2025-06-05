@@ -12,7 +12,7 @@ export interface ChatMessage {
   content: string;
 }
 
-const CLARIFY_SYSTEM_PROMPT = `You are an expert process designer. Given a user's process idea, generate 3-5 concise, actionable clarifying questions that will help you fully understand their goal and requirements. Only return the questions as a numbered list. Do not include any other text.`;
+const CLARIFY_SYSTEM_PROMPT = `You are a friendly, expert process designer helping a user clarify their process idea. Generate 3-5 warm, approachable, easy-to-answer questions. Each question should be specific, concrete, and guide the user on exactly what information to provide (avoid vagueness). Use a friendly, conversational tone, and feel free to add a touch of playfulness or creativity to make the questions more fun to answer! Only return the questions as a numbered list. Do not include any other text.`;
 
 export async function getClarificationQuestions(idea: string): Promise<string[]> {
   try {
@@ -56,5 +56,25 @@ export async function refinePrompt(messages: ChatMessage[]): Promise<string> {
   } catch (error) {
     console.error('Error calling OpenAI:', error);
     return 'I apologize, but I encountered an error. Please try again.';
+  }
+}
+
+const SUMMARY_SYSTEM_PROMPT = `Given the following process prompt, return a short phrase in the format: 'Process to [main goal]'. Make it simple, direct, and user-friendly so the user knows what the process will do. Do not repeat the original prompt verbatim. Example: 'Process to help friends understand Perplexity'.`;
+
+export async function getPromptSummary(prompt: string): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: 'system', content: SUMMARY_SYSTEM_PROMPT },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.5,
+      max_tokens: 100,
+    });
+    return response.choices[0]?.message?.content?.trim() || '';
+  } catch (error) {
+    console.error('Error getting prompt summary:', error);
+    return '';
   }
 } 
